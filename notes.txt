@@ -1,9 +1,0 @@
-********************* Initialize a Repo from existing code ******************
-> git init
-> git add --all
-> git commit -m 'initial commit'
-> git remote add origin https://......
-> git push -u origin <branch_name>
-*************************** refusing to merge unrelated histories ***************
-> git pull origin master --allow-unrelated-histories
-> git merge origin origin/master
