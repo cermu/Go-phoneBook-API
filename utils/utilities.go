@@ -11,7 +11,7 @@ func Message(code int32, description string) map[string]interface{} {
 }
 
 // Respond public function responds with json message
-func Respond(w http.ResponseWriter, data map[string]interface{}) {
+func Respond(w http.ResponseWriter, response map[string]interface{}) {
 	w.Header().Add("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(data)
+	_ = json.NewEncoder(w).Encode(response)
 }
