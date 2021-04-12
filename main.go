@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/cermu/Go-phoneBook-API/database"
+	"github.com/cermu/Go-phoneBook-API/models"
 	"github.com/cermu/Go-phoneBook-API/routers"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"log"
@@ -16,11 +16,11 @@ func main() {
 	// get file name and line number when the code crashes
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	database.InitDB()	// Initialize a database connection
-	// database.MigrateDB()	//perform database migrations
+	models.InitDB()    // Initialize a database connection
+	models.MigrateDB() //perform database migrations
 	// close the database connection after use
 	defer func() {
-		if dbErr := database.DBConnection.Close(); dbErr != nil {
+		if dbErr := models.DBConnection.Close(); dbErr != nil {
 			log.Printf("WARNING | Database connection failed to close with message: %v\n", dbErr.Error())
 		}
 	}()

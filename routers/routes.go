@@ -6,9 +6,9 @@ import (
 )
 
 type route struct {
-	Name string
-	Method string
-	Pattern string
+	Name        string
+	Method      string
+	Pattern     string
 	HandlerFunc http.HandlerFunc
 }
 
@@ -20,5 +20,23 @@ var routeSlice = routes{
 		Method:      "GET",
 		Pattern:     "/healthcheck",
 		HandlerFunc: controllers.HealthCheck,
+	},
+	route{
+		Name:        "CreateAccount",
+		Method:      "POST",
+		Pattern:     "/account/create",
+		HandlerFunc: controllers.CreateAccount,
+	},
+	route{
+		Name:        "MyAccount",
+		Method:      "GET",
+		Pattern:     "/account/{accountId}",
+		HandlerFunc: controllers.MyAccount,
+	},
+	route{
+		Name:        "Authenticate",
+		Method:      "POST",
+		Pattern:     "/authenticate",
+		HandlerFunc: controllers.Authenticate,
 	},
 }

@@ -1,8 +1,7 @@
-package database
+package models
 
 import (
 	"fmt"
-	"github.com/cermu/Go-phoneBook-API/models"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
@@ -39,11 +38,11 @@ func InitDB() {
 // MigrateDB public function used to perform database migrations.
 // Our models will be translated to database tables
 func MigrateDB () {
-	log.Println("INFO | Performing database migrations ...")
-	DBConnection.Debug().AutoMigrate(models.Account{}, models.Contact{})
+	log.Println("INFO | Running database migrations ...")
+	DBConnection.Debug().AutoMigrate(Account{}, Contact{})
 	// DBConnection.Debug().AUtoMigrate(...)
 
 	// migrating foreign keys
-	DBConnection.Model(&models.Contact{}).AddForeignKey("account_id", "account(id)", "CASCADE", "CASCADE")
+	DBConnection.Model(&Contact{}).AddForeignKey("account_id", "account(id)", "CASCADE", "CASCADE")
 	log.Println("INFO | Database migrations completed")
 }
