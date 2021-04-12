@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/cermu/Go-phoneBook-API/database"
 	"github.com/cermu/Go-phoneBook-API/routers"
+	utl "github.com/cermu/Go-phoneBook-API/utils"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,21 +13,35 @@ import (
 )
 
 func main() {
+	// get file name and line number when the code crashes
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	// Initialize a database connection
+	database.InitDB()
+
+	// close the database connection after use
+	defer func() {
+		if dbErr := database.DBConnection.Close(); dbErr != nil {
+			log.Printf("WARNING | Database connection failed to close with message: %v\n", dbErr.Error())
+		}
+	}()
+
+	apiPort := utl.ReadConfigs().GetInt("APP.PORT")
+
 	// API server
 	apiServer := &http.Server{
-		Addr:    ":8081",
+		Addr:    utl.ReadConfigs().GetString("APP.ADDRESS"),
 		Handler: routers.NewRouter(),
 	}
 
 	// start the server in a go routine
 	go func() {
-		fmt.Printf("INFO | Starting API server on port: 8081\n")
+		log.Printf("INFO | Starting API server on port: %v\n", apiPort)
 		err := apiServer.ListenAndServe()
 
 		if err != nil {
 			if err.Error() != "http: Server closed" {
-				fmt.Printf("ERROR | Failed to start API server: %v\n", err)
-				os.Exit(1)
+				log.Fatalf("ERROR | Failed to start API server: %v\n", err)
 			}
 		}
 	}()
@@ -37,11 +53,10 @@ func main() {
 	// block until a signal is received
 	receivedSignal := <-ch
 
-	fmt.Printf("WARNING | Shutting down API server %v signal received\n", receivedSignal)
+	log.Printf("WARNING | Shutting down API server %v signal received\n", receivedSignal)
 	err := apiServer.Shutdown(context.Background())
 	if err != nil {
-		fmt.Printf("ERROR | Failed to shut down API server: %v\n", err)
-		os.Exit(1)
+		log.Fatalf("ERROR | Failed to shut down API server: %v\n", err)
 	}
-	fmt.Println("INFO | API server has shut down")
+	log.Println("INFO | API server has shut down")
 }

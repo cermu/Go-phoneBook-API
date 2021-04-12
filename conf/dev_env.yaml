@@ -1,0 +1,15 @@
+APP:
+  ENV: "DEV"
+  PORT: 8081
+  ADDRESS: ":8081"
+DB:
+  NAME: "phonebookdb"
+  USER: "go_user"
+  PASS: "P@5sW0rd!"
+  HOST: "localhost"
+  PORT: 5432
+  TYPE: "postgres"
+REDIS:
+  HOST: "localhost"
+  PORT: 16729
+  DB: 0
