@@ -16,9 +16,8 @@ func main() {
 	// get file name and line number when the code crashes
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	// Initialize a database connection
-	database.InitDB()
-
+	database.InitDB()	// Initialize a database connection
+	// database.MigrateDB()	//perform database migrations
 	// close the database connection after use
 	defer func() {
 		if dbErr := database.DBConnection.Close(); dbErr != nil {
@@ -27,6 +26,7 @@ func main() {
 	}()
 
 	apiPort := utl.ReadConfigs().GetInt("APP.PORT")
+	apiENV := utl.ReadConfigs().GetString("APP.ENV")
 
 	// API server
 	apiServer := &http.Server{
@@ -36,7 +36,7 @@ func main() {
 
 	// start the server in a go routine
 	go func() {
-		log.Printf("INFO | Starting API server on port: %v\n", apiPort)
+		log.Printf("INFO | Starting API server on port: %v with %v configs\n", apiPort, apiENV)
 		err := apiServer.ListenAndServe()
 
 		if err != nil {
