@@ -116,14 +116,24 @@ func Login(email, password string) map[string]interface{} {
 		return utl.Message(102, "invalid login credentials, try again")
 	}
 
-	// all went well
-	// create token and respond with it
-	token, tokenErr := auth.CreateToken(account.ID)
+	// create tokens
+	authDetails, tokenErr := auth.CreateToken(account.ID)
 	if tokenErr != nil {
-		return utl.Message(105, "failed to create authentication token, try again")
+		return utl.Message(105, "failed to create authentication tokens, try again")
 	}
 
+	// save JWT metadata in redis
+	redisSaveErr := auth.SaveJWTMetadata(account.ID, authDetails)
+	if redisSaveErr != nil {
+		log.Printf("WARNING | An error occurred while saving to redis: %v\n", redisSaveErr)
+		return utl.Message(105, "failed to create authentication tokens, try again")
+	}
+
+	tokens := map[string]string{
+		"access_token":  authDetails.AccessToken,
+		"refresh_token": authDetails.RefreshToken,
+	}
 	response := utl.Message(0, "authentication successful")
-	response["token"] = token
+	response["tokens"] = tokens
 	return response
 }

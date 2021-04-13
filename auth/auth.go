@@ -4,6 +4,7 @@ import (
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/twinj/uuid"
+	"strconv"
 	"time"
 )
 
@@ -56,4 +57,26 @@ func CreateToken(accountId uint) (*AuthenticationDetails, error) {
 	}
 
 	return authDetails, nil
+}
+
+// SaveJWTMetadata public function that saves JWT metadata in redis
+func SaveJWTMetadata(accountId uint, authenticationDetails *AuthenticationDetails) error {
+	// convert unix to UTC
+	at := time.Unix(authenticationDetails.AccessTokenExpire, 0)
+	rt := time.Unix(authenticationDetails.RefreshTokenExpire, 0)
+
+	now := time.Now()
+
+	// save to redis
+	atErr := utl.RedisClient().Set(authenticationDetails.AccessUuid, strconv.Itoa(int(accountId)), at.Sub(now)).Err()
+	if atErr != nil {
+		return atErr
+	}
+
+	rtErr := utl.RedisClient().Set(authenticationDetails.RefreshUuid, strconv.Itoa(int(accountId)), rt.Sub(now)).Err()
+	if rtErr != nil {
+		return rtErr
+	}
+
+	return nil
 }
