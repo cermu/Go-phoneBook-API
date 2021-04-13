@@ -93,8 +93,6 @@ func (account *Account) CreateAccount() map[string]interface{} {
 	// remove the password
 	account.Password = ""
 
-	// create JWT token
-
 	response := utl.Message(0, "account has been created")
 	response["data"] = account
 	return response

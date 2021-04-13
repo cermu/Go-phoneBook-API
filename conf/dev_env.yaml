@@ -11,7 +11,7 @@ DB:
   TYPE: "postgres"
 REDIS:
   HOST: "localhost"
-  PORT: 16729
+  PORT: 6379
   DB: 0
 JWT:
   ACCESS_SECRET: "Gj$3&k.!P@5s39Et^0(fuL1s,0P"
