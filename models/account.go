@@ -137,3 +137,8 @@ func Login(email, password string) map[string]interface{} {
 	response["tokens"] = tokens
 	return response
 }
+
+// Logout public function to delete auth details and log out a user
+func Logout(accessUuid string) map[string]interface{} {
+	return utl.Message(0, "coming soon")
+}
