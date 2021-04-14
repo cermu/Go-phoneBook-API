@@ -7,7 +7,8 @@ import (
 
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
-	router.Use(middlewares.EnableCORS) // Attach the EnableCORS middleware
+	router.Use(middlewares.EnableCORS)        // Attach the EnableCORS middleware
+	router.Use(middlewares.JWTAuthentication) // Attach the JWTAuthentication middleware
 	api := router.PathPrefix("/phonebookapi/v1").Subrouter()
 
 	for _, route := range routeSlice {
@@ -19,5 +20,3 @@ func NewRouter() *mux.Router {
 	}
 	return router
 }
-
-
