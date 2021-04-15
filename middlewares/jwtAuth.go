@@ -137,13 +137,3 @@ func ExtractTokenFromRequest(req *http.Request) (*AccessTokenDetails, error) {
 	accessTokenDetails.AccountId = uint(accountId)
 	return accessTokenDetails, nil
 }
-
-// DeleteAuthenticationDetails public function that is called
-// when a user logs out to invalidate JWT token
-func DeleteAuthenticationDetails(accessUuid string) (int64, error) {
-	deleted, err := utl.RedisClient().Del(accessUuid).Result()
-	if err != nil {
-		return 0, err
-	}
-	return deleted, nil
-}

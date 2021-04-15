@@ -80,3 +80,13 @@ func SaveJWTMetadata(accountId uint, authenticationDetails *AuthenticationDetail
 
 	return nil
 }
+
+// DeleteAuthenticationDetails public function that is called
+// when a user logs out to invalidate JWT token
+func DeleteAuthenticationDetails(uuid string) (int64, error) {
+	deleted, err := utl.RedisClient().Del(uuid).Result()
+	if err != nil {
+		return 0, err
+	}
+	return deleted, nil
+}

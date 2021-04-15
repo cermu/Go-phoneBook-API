@@ -148,7 +148,7 @@ func Logout(req *http.Request) map[string]interface{} {
 		return utl.Message(105, "failed to log out, try again")
 	}
 
-	authDeleted, authDelErr := middlewares.DeleteAuthenticationDetails(accessDetails.AccessUuid)
+	authDeleted, authDelErr := auth.DeleteAuthenticationDetails(accessDetails.AccessUuid)
 	if authDelErr != nil || authDeleted == 0 {
 		log.Printf("WARNING | The following error occurred while logging out: %v\n", authDelErr)
 		return utl.Message(105, "failed to log out, try again")
