@@ -45,4 +45,10 @@ var routeSlice = routes{
 		Pattern:     "/logout",
 		HandlerFunc: controllers.UserLogout,
 	},
+	route{
+		Name:        "Refresh",
+		Method:      "POST",
+		Pattern:     "/token/refresh",
+		HandlerFunc: controllers.RefreshToken,
+	},
 }

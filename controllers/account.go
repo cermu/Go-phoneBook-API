@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"encoding/json"
+	"github.com/cermu/Go-phoneBook-API/auth"
 	"github.com/cermu/Go-phoneBook-API/models"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"net/http"
@@ -26,7 +27,7 @@ var CreateAccount = func(w http.ResponseWriter, req *http.Request) {
 }
 
 // MyAccount public handler variable to fetch a specific account details
-var MyAccount = func(w http.ResponseWriter, req * http.Request) {
+var MyAccount = func(w http.ResponseWriter, req *http.Request) {
 	response := utl.Message(0, "coming soon")
 	utl.Respond(w, response)
 	return
@@ -51,6 +52,31 @@ var Authenticate = func(w http.ResponseWriter, req *http.Request) {
 // UserLogout public handler variable to log out a logged in user
 var UserLogout = func(w http.ResponseWriter, req *http.Request) {
 	response := models.Logout(req)
+	utl.Respond(w, response)
+	return
+}
+
+// RefreshToken public handler variable to refresh JWT token
+var RefreshToken = func(w http.ResponseWriter, req *http.Request) {
+	mapRefreshToken := &models.MapRefreshToken{}
+	err := json.NewDecoder(req.Body).Decode(mapRefreshToken)
+	if err != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	newTokens, newTokensErr := auth.Refresh(mapRefreshToken.RefreshToken)
+	if newTokensErr != nil {
+		response := utl.Message(105, newTokensErr.Error())
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		utl.Respond(w, response)
+		return
+	}
+
+	response := utl.Message(0, "access_token has been refreshed")
+	response["tokens"] = newTokens
 	utl.Respond(w, response)
 	return
 }

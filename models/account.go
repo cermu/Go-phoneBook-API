@@ -32,6 +32,11 @@ type LoginDetails struct {
 	Password string `json:"password"`
 }
 
+// RefreshToken struct to fetch refresh_token from json request
+type MapRefreshToken struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 // validateAccountData private method to be used to validate
 // incoming requests to create an account
 func (account *Account) validateAccountData() (map[string]interface{}, bool) {
