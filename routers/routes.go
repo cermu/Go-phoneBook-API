@@ -39,4 +39,10 @@ var routeSlice = routes{
 		Pattern:     "/authenticate",
 		HandlerFunc: controllers.Authenticate,
 	},
+	route{
+		Name:        "Logout",
+		Method:      "GET",
+		Pattern:     "/logout",
+		HandlerFunc: controllers.UserLogout,
+	},
 }

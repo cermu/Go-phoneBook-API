@@ -59,7 +59,7 @@ func JWTAuthentication(next http.Handler) http.Handler {
 		// check if metadata is in redis
 		accountIdFromRedis, redisErr := fetchAccessMetadata(accessTokenDetails)
 		if redisErr != nil {
-			log.Printf("WARNING | An error occurred while fetching from redis: %v\n", redisErr)
+			log.Printf("WARNING | No key to fetch from redis, account id is %d and message is %v\n", accountIdFromRedis, redisErr)
 			response = utl.Message(105, "authentication token not recognized")
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -136,4 +136,14 @@ func ExtractTokenFromRequest(req *http.Request) (*AccessTokenDetails, error) {
 	accessTokenDetails.AccessUuid = accessUuid
 	accessTokenDetails.AccountId = uint(accountId)
 	return accessTokenDetails, nil
+}
+
+// DeleteAuthenticationDetails public function that is called
+// when a user logs out to invalidate JWT token
+func DeleteAuthenticationDetails(accessUuid string) (int64, error) {
+	deleted, err := utl.RedisClient().Del(accessUuid).Result()
+	if err != nil {
+		return 0, err
+	}
+	return deleted, nil
 }

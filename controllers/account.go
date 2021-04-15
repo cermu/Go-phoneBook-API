@@ -47,3 +47,10 @@ var Authenticate = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// UserLogout public handler variable to log out a logged in user
+var UserLogout = func(w http.ResponseWriter, req *http.Request) {
+	response := models.Logout(req)
+	utl.Respond(w, response)
+	return
+}

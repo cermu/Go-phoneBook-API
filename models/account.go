@@ -3,10 +3,12 @@ package models
 import (
 	"github.com/badoux/checkmail"
 	"github.com/cermu/Go-phoneBook-API/auth"
+	"github.com/cermu/Go-phoneBook-API/middlewares"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"net/http"
 )
 
 /* Account struct to store user information
@@ -139,6 +141,18 @@ func Login(email, password string) map[string]interface{} {
 }
 
 // Logout public function to delete auth details and log out a user
-func Logout(accessUuid string) map[string]interface{} {
-	return utl.Message(0, "coming soon")
+func Logout(req *http.Request) map[string]interface{} {
+	accessDetails, err := middlewares.ExtractTokenFromRequest(req)
+	if err != nil {
+		log.Printf("WARNING | The following error occurred while logging out: %v\n", err.Error())
+		return utl.Message(105, "failed to log out, try again")
+	}
+
+	authDeleted, authDelErr := middlewares.DeleteAuthenticationDetails(accessDetails.AccessUuid)
+	if authDelErr != nil || authDeleted == 0 {
+		log.Printf("WARNING | The following error occurred while logging out: %v\n", authDelErr)
+		return utl.Message(105, "failed to log out, try again")
+	}
+	response := utl.Message(0, "logged out successfully")
+	return response
 }
