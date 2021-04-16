@@ -145,6 +145,27 @@ func Login(email, password string) map[string]interface{} {
 	return response
 }
 
+// FetchAccount public method that takes in an account id and returns
+// account data
+func (account *Account) FetchAccount(accountId uint) map[string]interface{} {
+	err := DBConnection.Table("account").Where("id=?", accountId).First(&account).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while fetching account from database: %v\n", err)
+		return utl.Message(105, "failed to fetch account details, try again")
+	}
+
+	// account not found
+	if account.Email == "" {
+		return utl.Message(104, "account details not found")
+	}
+
+	// remove the password
+	account.Password = ""
+	response := utl.Message(0, "account details fetched successfully")
+	response["data"] = account
+	return response
+}
+
 // Logout public function to delete auth details and log out a user
 func Logout(req *http.Request) map[string]interface{} {
 	accessDetails, err := middlewares.ExtractTokenFromRequest(req)
