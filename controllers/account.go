@@ -94,3 +94,11 @@ var RefreshToken = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// Deactivate public handler variable to fetch a specific account details
+var Deactivate = func(w http.ResponseWriter, req *http.Request) {
+	account := &models.Account{}
+	response := account.DeactivateAccount(req)
+	utl.Respond(w, response)
+	return
+}

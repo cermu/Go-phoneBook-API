@@ -21,7 +21,8 @@ type Account struct {
 	Email       string    `gorm:"size:255;not null;unique;index:idx_email" json:"email"`
 	PhoneNumber string    `gorm:"type:varchar(15);not null;unique;index:idx_phone" json:"phone_number"`
 	Password    string    `gorm:"type:varchar(255); not null" json:"password"`
-	Contacts    []Contact `gorm:"ForeignKey:AccountID"`
+	Active      bool      `gorm:"default:true" json:"active"`
+	Contacts    []Contact `gorm:"ForeignKey:AccountID" json:"contacts"`
 }
 
 /* LoginDetails struct used to fetch login credentials
@@ -108,11 +109,12 @@ func (account *Account) CreateAccount() map[string]interface{} {
 // Login public function to authenticate users
 func Login(email, password string) map[string]interface{} {
 	account := &Account{}
-	err := DBConnection.Table("account").Where("email=?", email).First(account).Error
+	err := DBConnection.Table("account").Where("email=? AND active=?", email, true).First(account).Error
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return utl.Message(104, "account does not exist, check credentials or create one")
+			return utl.Message(104, "account deactivated or it does not exist, " +
+				"check credentials, create one or request for reactivation")
 		}
 		return utl.Message(105, "failed to fetch account, try again")
 	}
@@ -161,7 +163,7 @@ func (account *Account) FetchAccount(accountId uint) map[string]interface{} {
 
 	// remove the password
 	account.Password = ""
-	response := utl.Message(0, "account details fetched successfully")
+	response := utl.Message(00, "account details fetched successfully")
 	response["data"] = account
 	return response
 }
@@ -181,4 +183,45 @@ func Logout(req *http.Request) map[string]interface{} {
 	}
 	response := utl.Message(0, "logged out successfully")
 	return response
+}
+
+// DeactivateAccount public method that set's an account to in active
+func (account *Account) DeactivateAccount(req *http.Request) map[string]interface{} {
+	ch := make(chan int, 1)
+	// delete access token details from redis using go routines
+	go func() {
+		accessDetails, err := middlewares.ExtractTokenFromRequest(req)
+		if err != nil {
+			ch <- 0
+		}
+
+		deleted, delErr := auth.DeleteAuthenticationDetails(accessDetails.AccessUuid)
+		if delErr != nil || deleted == 0 {
+			ch <- 0
+		}
+		ch <- 1
+	}()
+
+	accountId := req.Context().Value("account").(uint) // fetch account id from context
+	err := DBConnection.Table("account").Where("id=?", accountId).First(&account).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while fetching account from database to deactivate it: %v\n", err)
+		return utl.Message(105, "failed to deactivate account, try again")
+	}
+
+	// account not found
+	if account.Email == "" {
+		return utl.Message(104, "account details not found")
+	}
+
+	// use a db transaction to deactivate an account
+	account.Active = false
+	DBConnection.Model(&account).Where("active=?", true).Update("active", false)
+
+	// block until a value is received in the channel
+	val := <- ch
+	if val == 0 {
+		return utl.Message(100, "account deactivated successfully but redis details were not cleared")
+	}
+	return utl.Message(0, "account deactivated successfully")
 }

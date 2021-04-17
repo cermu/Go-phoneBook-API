@@ -51,4 +51,10 @@ var routeSlice = routes{
 		Pattern:     "/token/refresh",
 		HandlerFunc: controllers.RefreshToken,
 	},
+	route{
+		Name:        "DeactivateAccount",
+		Method:      "GET",
+		Pattern:     "/deactivate/account",
+		HandlerFunc: controllers.Deactivate,
+	},
 }

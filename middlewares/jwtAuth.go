@@ -59,8 +59,15 @@ func JWTAuthentication(next http.Handler) http.Handler {
 		// check if metadata is in redis
 		accountIdFromRedis, redisErr := fetchAccessMetadata(accessTokenDetails)
 		if redisErr != nil {
+			if accountIdFromRedis == 0 {
+				response = utl.Message(106, "authentication token is invalid, please make request for a new one")
+				w.Header().Add("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+				utl.Respond(w, response)
+				return
+			}
 			log.Printf("WARNING | No key to fetch from redis, account id is %d and message is %v\n", accountIdFromRedis, redisErr)
-			response = utl.Message(105, "authentication token not recognized")
+			response = utl.Message(105, "authentication token not recognized, please make request for a new one")
 			w.Header().Add("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
 			utl.Respond(w, response)
