@@ -102,3 +102,22 @@ var Deactivate = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// UpdateAccount public handler variable to make updates on a n existing account
+var UpdateAccount = func(w http.ResponseWriter, req *http.Request) {
+	// fetch account id from request context
+	accountId := req.Context().Value("account").(uint)
+
+	updateDetails := &models.UpdateAccountDetails{}
+	err := json.NewDecoder(req.Body).Decode(updateDetails)
+	if err != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	// update an account
+	response := models.UpdateAccount(updateDetails, accountId)
+	utl.Respond(w, response)
+	return
+}

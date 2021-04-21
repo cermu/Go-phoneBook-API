@@ -33,6 +33,16 @@ type LoginDetails struct {
 	Password string `json:"password"`
 }
 
+/* UpdateAccountDetails struct used to fetch account credentials
+from json request in order to update an existing account
+*/
+type UpdateAccountDetails struct {
+	FirstName   string    `json:"first_name"`
+	LastName    string    `json:"last_name"`
+	Email       string    `json:"email"`
+	PhoneNumber string    `json:"phone_number"`
+}
+
 // RefreshToken struct to fetch refresh_token from json request
 type MapRefreshToken struct {
 	RefreshToken string `json:"refresh_token"`
@@ -224,4 +234,57 @@ func (account *Account) DeactivateAccount(req *http.Request) map[string]interfac
 		return utl.Message(100, "account deactivated successfully but redis details were not cleared")
 	}
 	return utl.Message(0, "account deactivated successfully")
+}
+
+// UpdateAccount public function that is used to make updates to an
+// existing account
+func UpdateAccount(updateAccount *UpdateAccountDetails, accountId uint) map[string]interface{} {
+	account := &Account{}
+
+	// check for empty data
+	if updateAccount.FirstName == "" || updateAccount.LastName == "" || updateAccount.Email == "" ||
+		updateAccount.PhoneNumber == "" {
+		return utl.Message(102, "the following fields are required: first_name, "+
+			"last_name, email, phone_number")
+	}
+
+	// validate email
+	if err := checkmail.ValidateFormat(updateAccount.Email); err != nil {
+		return utl.Message(102, "provide a valid email address")
+	}
+
+	// email address and phone number must be unique
+	tmp := &Account{}
+	emailErr := DBConnection.Table("account").Where("email=? AND id NOT IN (?)",
+		updateAccount.Email, []uint{accountId}).First(tmp).Error
+	if emailErr != nil && emailErr != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while validatin email address: %v\n", emailErr.Error())
+		return utl.Message(105, "failed to validate email, try again later")
+	}
+
+	if tmp.Email != "" {
+		return utl.Message(101, "email address already exists")
+	}
+
+	phoneErr := DBConnection.Table("account").Where("phone_number=? AND id NOT IN (?)",
+		updateAccount.PhoneNumber, []uint{accountId}).First(tmp).Error
+	if phoneErr != nil && phoneErr != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while validatin phone number: %v\n", phoneErr.Error())
+		return utl.Message(105, "failed to validate phone number, try again later")
+	}
+
+	if tmp.PhoneNumber != "" {
+		return utl.Message(101, "phone number already exists")
+	}
+	
+	// update the account
+	DBConnection.Model(account).Where("id=?", accountId).Updates(map[string]interface{}{"first_name": updateAccount.FirstName,
+		"last_name": updateAccount.LastName, "email": updateAccount.Email, "phone_number": updateAccount.PhoneNumber})
+
+	// fetch and return account
+	DBConnection.First(account, accountId)
+	account.Password = ""
+	response := utl.Message(0, "account has been updated")
+	response["data"] = account
+	return response
 }

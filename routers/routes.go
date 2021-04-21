@@ -24,7 +24,7 @@ var routeSlice = routes{
 	route{
 		Name:        "CreateAccount",
 		Method:      "POST",
-		Pattern:     "/account/create",
+		Pattern:     "/create/account",
 		HandlerFunc: controllers.CreateAccount,
 	},
 	route{
@@ -56,5 +56,11 @@ var routeSlice = routes{
 		Method:      "GET",
 		Pattern:     "/deactivate/account",
 		HandlerFunc: controllers.Deactivate,
+	},
+	route{
+		Name:        "UpdateAccount",
+		Method:      "POST",
+		Pattern:     "/update/account",
+		HandlerFunc: controllers.UpdateAccount,
 	},
 }
