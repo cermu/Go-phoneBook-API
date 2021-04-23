@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/badoux/checkmail"
 	"github.com/cermu/Go-phoneBook-API/auth"
 	"github.com/cermu/Go-phoneBook-API/middlewares"
@@ -52,6 +53,11 @@ type MapRefreshToken struct {
 type ChangePassword struct {
 	Password      string `json:"password"`
 	PasswordAgain string `json:"password_again"`
+}
+
+// ResetPassword struct to fetch account's email from json request
+type ResetPassword struct {
+	Email string `json:"email"`
 }
 
 // validateAccountData private method to be used to validate
@@ -310,8 +316,7 @@ func (account *Account) ChangePassword(changePassword *ChangePassword, accountId
 	// fetch the account from DB
 	err := DBConnection.Table("account").Where("id=? AND active=?", accountId, true).First(&account).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Printf("WARNING | An error occurred while fetching account from database to change its password "+
-			"it: %v\n", err)
+		log.Printf("WARNING | An error occurred while fetching account from database to change its password it: %v\n", err)
 		return utl.Message(105, "password change failed, try again")
 	}
 
@@ -326,4 +331,99 @@ func (account *Account) ChangePassword(changePassword *ChangePassword, accountId
 
 	// respond to the request
 	return utl.Message(0, "password changed successfully")
+}
+
+// SendResetPasswordLink public method used to reset an account's password
+func SendResetPasswordLink(resetPassword *ResetPassword) map[string]interface{} {
+	// check for empty data
+	if resetPassword.Email == "" {
+		return utl.Message(102, "the following field is required: email")
+	}
+
+	// validate email
+	if err := checkmail.ValidateFormat(resetPassword.Email); err != nil {
+		return utl.Message(102, "provide a valid email address")
+	}
+
+	// check if account exists
+	account := &Account{}
+	err := DBConnection.Table("account").Where("email=? AND active=?",
+		resetPassword.Email, true).First(&account).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while fetching account from database to send a password reset link: %v\n", err)
+		return utl.Message(0, "an email has been sent with instructions to reset your password")
+	}
+
+	if account.Email == "" {
+		return utl.Message(0, "an email has been sent with instructions to reset your password")
+	}
+
+	// send email
+	done := make(chan bool, 1)
+	go func() {
+		// generate reset link
+		resetLinkMeta, rlErr := auth.GenerateResetPasswordLink()
+		if rlErr != nil {
+			done <- false
+		}
+
+		// save metadata to redis
+		saveErr := auth.SaveResetLinkMetadata(account.ID, resetLinkMeta)
+		if saveErr != nil {
+			log.Printf("WARNING | An error occurred while saving to redis: %v\n", saveErr)
+			done <- false
+		}
+
+		resetLinkToken := resetLinkMeta.RandomString
+		resetLink := fmt.Sprintf("http://localhost:8081/phonebookapi/v1/reset/password/%s", resetLinkToken)
+
+		// send the actual email here
+		log.Printf("INFO | An email has been sent to: %v with link: %v", account.Email, resetLink)
+		done <- true
+	}()
+	<-done
+	return utl.Message(0, "an email has been sent with instructions to reset your password")
+}
+
+// ResetPassword public method used to reset an account's password
+func ResetAccountPassword(resetLinkToken string, changePassword *ChangePassword) map[string]interface{} {
+	// validate the passwords in request
+	if changePassword.Password == "" || changePassword.PasswordAgain == "" {
+		return utl.Message(102, "the following fields are required, password, password_again")
+	}
+	if changePassword.PasswordAgain != changePassword.Password {
+		return utl.Message(102, "password reset failed, passwords entered did not match")
+	}
+
+	// fetch metadata from redis
+	accountId, err := utl.RedisClient().Get(resetLinkToken).Result()
+	if err != nil {
+		log.Printf("WARNING | An error has occurred while fetching data from redis: %v\n", err.Error())
+		return utl.Message(106, "password reset link has expired")
+	}
+
+	// fetch account
+	account := &Account{}
+	fetchErr := DBConnection.Table("account").Where("id=? AND active=?", accountId, true).First(&account).Error
+	if fetchErr != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while fetching account from database to reset its password it: %v\n", err)
+		return utl.Message(105, "password reset failed, try again")
+	}
+
+	if account.Email == "" {
+		return utl.Message(104, "account is deactivated or it does not exist")
+	}
+
+	// reset account's password
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(changePassword.PasswordAgain), bcrypt.DefaultCost)
+	account.Password = string(hashedPassword)
+	DBConnection.Model(&account).Update("password", string(hashedPassword))
+
+	// delete password reset meta from redis
+	_, delErr := auth.DeleteAuthenticationDetails(resetLinkToken)
+	if delErr != nil {
+		log.Printf("WARNING | An error occurred while deleting reset link metadata from redis: %v\n", delErr)
+	}
+
+	return utl.Message(0, "password has been reset successfully")
 }

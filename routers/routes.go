@@ -64,9 +64,21 @@ var routeSlice = routes{
 		HandlerFunc: controllers.UpdateAccount,
 	},
 	route{
-		Name:        "ChangePaddword",
+		Name:        "ChangePassword",
 		Method:      "POST",
 		Pattern:     "/change/password",
 		HandlerFunc: controllers.ChangePassword,
+	},
+	route{
+		Name:        "SendResetPasswordLink",
+		Method:      "POST",
+		Pattern:     "/send/reset/password/link",
+		HandlerFunc: controllers.SendResetPasswordLink,
+	},
+	route{
+		Name:        "ResetPassword",
+		Method:      "POST",
+		Pattern:     "/reset/password/{linkToken}",
+		HandlerFunc: controllers.ResetPassword,
 	},
 }

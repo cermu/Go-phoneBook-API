@@ -142,3 +142,45 @@ var ChangePassword = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// SendResetPasswordLink public handler variable to send password reset link
+var SendResetPasswordLink = func(w http.ResponseWriter, req *http.Request) {
+	// decode json body
+	resetPassword := &models.ResetPassword{}
+	err := json.NewDecoder(req.Body).Decode(resetPassword)
+	if err != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	// send password reset link
+	response := models.SendResetPasswordLink(resetPassword)
+	utl.Respond(w, response)
+	return
+}
+
+// ResetPassword public handler variable to enable a password reset
+var ResetPassword = func(w http.ResponseWriter, req *http.Request) {
+	// fetch link token from URI
+	params := mux.Vars(req)
+	linkToken, ok := params["linkToken"]
+	if !ok {
+		response := utl.Message(102, "request failed, try again")
+		utl.Respond(w, response)
+		return
+	}
+	// decode json body
+	changePassword := &models.ChangePassword{}
+	decodeErr := json.NewDecoder(req.Body).Decode(changePassword)
+	if decodeErr != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	// reset password
+	response := models.ResetAccountPassword(linkToken, changePassword)
+	utl.Respond(w, response)
+	return
+}

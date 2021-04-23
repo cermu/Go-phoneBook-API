@@ -6,6 +6,7 @@ import (
 	"fmt"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
@@ -34,8 +35,13 @@ func middleware(next http.Handler) http.Handler {
 func JWTAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// resources that do not require authentication
+		params := mux.Vars(req)
+		linkToken, _ := params["linkToken"]
+		passwordReset := fmt.Sprintf("/phonebookapi/v1/reset/password/%s", linkToken)
+
 		nonAuthResources := []string{"/phonebookapi/v1/account/create", "/phonebookapi/v1/healthcheck",
-			"/phonebookapi/v1/authenticate"}
+			"/phonebookapi/v1/authenticate", "/phonebookapi/v1/send/reset/password/link",
+			passwordReset}
 
 		requestedResource := req.URL.Path // requested resource
 		for _, value := range nonAuthResources {
