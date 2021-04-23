@@ -63,4 +63,10 @@ var routeSlice = routes{
 		Pattern:     "/update/account",
 		HandlerFunc: controllers.UpdateAccount,
 	},
+	route{
+		Name:        "ChangePaddword",
+		Method:      "POST",
+		Pattern:     "/change/password",
+		HandlerFunc: controllers.ChangePassword,
+	},
 }

@@ -121,3 +121,24 @@ var UpdateAccount = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// ChangePassword public handler variable to enable an account password change
+var ChangePassword = func(w http.ResponseWriter, req *http.Request) {
+	// fetch account id from request context
+	accountId := req.Context().Value("account").(uint)
+
+	// decode json body
+	changePassword := &models.ChangePassword{}
+	err := json.NewDecoder(req.Body).Decode(changePassword)
+	if err != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	// change password
+	account := &models.Account{}
+	response := account.ChangePassword(changePassword, accountId)
+	utl.Respond(w, response)
+	return
+}

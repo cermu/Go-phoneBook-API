@@ -18,10 +18,14 @@ func main() {
 
 	models.InitDB()    // Initialize a database connection
 	models.MigrateDB() //perform database migrations
-	// close the database connection after use
+	// close database and redis connection after use
 	defer func() {
 		if dbErr := models.DBConnection.Close(); dbErr != nil {
 			log.Printf("WARNING | Database connection failed to close with message: %v\n", dbErr.Error())
+		}
+
+		if redisErr := utl.RedisClient().Close(); redisErr != nil {
+			log.Printf("WARNING | Redis connection failed to close with message: %v\n", redisErr.Error())
 		}
 	}()
 

@@ -37,15 +37,21 @@ type LoginDetails struct {
 from json request in order to update an existing account
 */
 type UpdateAccountDetails struct {
-	FirstName   string    `json:"first_name"`
-	LastName    string    `json:"last_name"`
-	Email       string    `json:"email"`
-	PhoneNumber string    `json:"phone_number"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
 }
 
 // RefreshToken struct to fetch refresh_token from json request
 type MapRefreshToken struct {
 	RefreshToken string `json:"refresh_token"`
+}
+
+// ChangePassword struct to fetch new password from json request
+type ChangePassword struct {
+	Password      string `json:"password"`
+	PasswordAgain string `json:"password_again"`
 }
 
 // validateAccountData private method to be used to validate
@@ -123,9 +129,11 @@ func Login(email, password string) map[string]interface{} {
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return utl.Message(104, "account deactivated or it does not exist, " +
+			return utl.Message(104, "account deactivated or it does not exist, "+
 				"check credentials, create one or request for reactivation")
 		}
+		log.Printf("WARNING | An error occurred while fetching account from database to login/authenticate "+
+			"it: %v\n", err)
 		return utl.Message(105, "failed to fetch account, try again")
 	}
 
@@ -224,12 +232,12 @@ func (account *Account) DeactivateAccount(req *http.Request) map[string]interfac
 		return utl.Message(104, "account details not found")
 	}
 
-	// use a db transaction to deactivate an account
+	// deactivate an account
 	account.Active = false
 	DBConnection.Model(&account).Where("active=?", true).Update("active", false)
 
 	// block until a value is received in the channel
-	val := <- ch
+	val := <-ch
 	if val == 0 {
 		return utl.Message(100, "account deactivated successfully but redis details were not cleared")
 	}
@@ -276,7 +284,7 @@ func UpdateAccount(updateAccount *UpdateAccountDetails, accountId uint) map[stri
 	if tmp.PhoneNumber != "" {
 		return utl.Message(101, "phone number already exists")
 	}
-	
+
 	// update the account
 	DBConnection.Model(account).Where("id=?", accountId).Updates(map[string]interface{}{"first_name": updateAccount.FirstName,
 		"last_name": updateAccount.LastName, "email": updateAccount.Email, "phone_number": updateAccount.PhoneNumber})
@@ -287,4 +295,35 @@ func UpdateAccount(updateAccount *UpdateAccountDetails, accountId uint) map[stri
 	response := utl.Message(0, "account has been updated")
 	response["data"] = account
 	return response
+}
+
+// ChangePassword public method used to change an account's password
+func (account *Account) ChangePassword(changePassword *ChangePassword, accountId uint) map[string]interface{} {
+	// validate the passwords in request
+	if changePassword.Password == "" || changePassword.PasswordAgain == "" {
+		return utl.Message(102, "the following fields are required, password, password_again")
+	}
+	if changePassword.PasswordAgain != changePassword.Password {
+		return utl.Message(102, "password change failed, passwords entered did not match")
+	}
+
+	// fetch the account from DB
+	err := DBConnection.Table("account").Where("id=? AND active=?", accountId, true).First(&account).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Printf("WARNING | An error occurred while fetching account from database to change its password "+
+			"it: %v\n", err)
+		return utl.Message(105, "password change failed, try again")
+	}
+
+	if account.Email == "" {
+		return utl.Message(104, "account is deactivated or it does not exist")
+	}
+
+	// bcrypt the new password and update the existing one
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(changePassword.PasswordAgain), bcrypt.DefaultCost)
+	account.Password = string(hashedPassword)
+	DBConnection.Model(&account).Update("password", string(hashedPassword))
+
+	// respond to the request
+	return utl.Message(0, "password changed successfully")
 }
