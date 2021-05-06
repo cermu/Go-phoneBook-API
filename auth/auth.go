@@ -19,6 +19,7 @@ type AuthenticationDetails struct {
 	RefreshUuid        string
 	AccessTokenExpire  int64
 	RefreshTokenExpire int64
+	TokenType          string
 }
 
 // CreateToken public function that returns a JWT auth token
@@ -35,6 +36,8 @@ func CreateToken(accountId uint) (*AuthenticationDetails, error) {
 	// refresh token valid for 7 days only
 	authDetails.RefreshTokenExpire = time.Now().Add(time.Hour * 24 * 7).Unix()
 	authDetails.RefreshUuid = uuid.NewV4().String()
+
+	authDetails.TokenType = "Bearer"
 
 	// creating access token
 	atClaims := jwt.MapClaims{}
@@ -154,6 +157,7 @@ func Refresh(refreshToken string) (map[string]interface{}, error) {
 		tokens := map[string]interface{}{
 			"access_token":  authDetails.AccessToken,
 			"refresh_token": authDetails.RefreshToken,
+			"type":          authDetails.TokenType,
 		}
 		return tokens, nil
 	} else {

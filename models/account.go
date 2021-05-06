@@ -165,6 +165,7 @@ func Login(email, password string) map[string]interface{} {
 	tokens := map[string]string{
 		"access_token":  authDetails.AccessToken,
 		"refresh_token": authDetails.RefreshToken,
+		"type":          authDetails.TokenType,
 	}
 	response := utl.Message(0, "authentication successful")
 	response["tokens"] = tokens

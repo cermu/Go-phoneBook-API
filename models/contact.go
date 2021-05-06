@@ -11,3 +11,5 @@ type Contact struct {
 	Email       string `gorm:"size:255;not null" json:"email"`
 	AccountID   uint   `gorm:"not null" json:"account_id"` // this is a foreign_key from the account table
 }
+
+// CreateContact public method that allows a user/account to create/save a contact
