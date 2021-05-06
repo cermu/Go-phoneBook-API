@@ -81,4 +81,10 @@ var routeSlice = routes{
 		Pattern:     "/reset/password/{linkToken}",
 		HandlerFunc: controllers.ResetPassword,
 	},
+	route{
+		Name:        "CreateContact",
+		Method:      "POST",
+		Pattern:     "/contact/create",
+		HandlerFunc: controllers.CreateContact,
+	},
 }
