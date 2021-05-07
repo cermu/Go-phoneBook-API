@@ -48,7 +48,7 @@ func (contact *Contact) CreateContact(accountId uint) map[string]interface{} {
 	}
 
 	// save the contact in DB
-	contact.ID = accountId
+	contact.AccountID = accountId
 	DBConnection.Table("contact").Create(contact)
 	if contact.ID <= 0 {
 		return utl.Message(105, "failed to save contact, tyr again")
