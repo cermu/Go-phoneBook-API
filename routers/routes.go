@@ -87,4 +87,10 @@ var routeSlice = routes{
 		Pattern:     "/contact/create",
 		HandlerFunc: controllers.CreateContact,
 	},
+	route{
+		Name:        "FetchContactsByAccountId",
+		Method:      "GET",
+		Pattern:     "/fetch/account/contacts",
+		HandlerFunc: controllers.FetchContactsByAccountId,
+	},
 }

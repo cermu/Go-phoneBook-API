@@ -4,6 +4,7 @@ import (
 	"github.com/badoux/checkmail"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/jinzhu/gorm"
+	"log"
 	"strings"
 )
 
@@ -56,5 +57,22 @@ func (contact *Contact) CreateContact(accountId uint) map[string]interface{} {
 
 	response := utl.Message(0, "contact has been created")
 	response["data"] = contact
+	return response
+}
+
+// FetchContactsByAccountId public method that fetches contacts belonging to a specified account
+func (contact *Contact) FetchContactsByAccountId(accountId uint) map[string]interface{} {
+	// query contact table by account_id
+	contacts := make([]*Contact, 0) // results will be stored in a slice of type Contact pointer
+	err := DBConnection.Table("contact").Where("account_id=?", accountId).Find(&contacts).Error
+	if err != nil {
+		log.Printf("WARNING | An error occurred while fetching contacts for account: %d. Error: %v\n",
+			accountId, err.Error())
+		return utl.Message(105, "failed to fetch contacts, tyr again later")
+	}
+
+	// return the results
+	response := utl.Message(0, "contacts fetched successfully")
+	response["data"] = contacts
 	return response
 }

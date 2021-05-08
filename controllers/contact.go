@@ -27,3 +27,16 @@ var CreateContact = func(w http.ResponseWriter, req *http.Request) {
 	utl.Respond(w, response)
 	return
 }
+
+// FetchContactsByAccountId public handler variable for fetching contacts for a specified account
+var FetchContactsByAccountId = func(w http.ResponseWriter, req *http.Request) {
+	contact := &models.Contact{}
+
+	// fetch account id from request context
+	accountId := req.Context().Value("account").(uint)
+
+	// fetch contacts
+	response := contact.FetchContactsByAccountId(accountId)
+	utl.Respond(w, response)
+	return
+}
