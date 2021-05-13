@@ -92,3 +92,46 @@ func (contact *Contact) FetchContactById(contactId uint) map[string]interface{} 
 	response["data"] = result
 	return response
 }
+
+// UpdateContact public method that is called to make updates to an existing contact record
+func (contact *Contact) UpdateContact(contactId uint) map[string]interface{} {
+	// validate email
+	if contact.Email != "" {
+		if err := checkmail.ValidateFormat(contact.Email); err != nil {
+			return utl.Message(102, "email address is not valid")
+		}
+	}
+
+	// validate phone number
+	// should not be less than 9 digits and more than 12 chars
+	// accepted: 0712345678, 254712345678, 712345678
+	// store: 712345678
+	if contact.PhoneNumber != "" {
+		if len(contact.PhoneNumber) > 12 || len(contact.PhoneNumber) < 9 {
+			return utl.Message(102, "enter a valid phone number, between 9 to 12 digits.")
+		}
+
+		if strings.HasPrefix(contact.PhoneNumber, "254") {
+			phoneNumber_ := contact.PhoneNumber[3:len(contact.PhoneNumber)]
+			contact.PhoneNumber = phoneNumber_
+		}
+
+		if strings.HasPrefix(contact.PhoneNumber, "0") {
+			phoneNumber_ := contact.PhoneNumber[1:len(contact.PhoneNumber)]
+			contact.PhoneNumber = phoneNumber_
+		}
+	}
+
+	// update contact record
+	err := DBConnection.Table("contact").Model(contact).Where("id=?", contactId).Updates(contact).Error
+	if err != nil {
+		log.Printf("WARNING | An error occurred while updating contact: %v\n", err.Error())
+		return utl.Message(105, "failed to update contact, try again later")
+	}
+
+	// fetch and return updated contact
+	DBConnection.Table("contact").First(contact, contactId)
+	response := utl.Message(0, "contact updated successfully")
+	response["data"] = contact
+	return response
+}

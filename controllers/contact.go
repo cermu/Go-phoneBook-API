@@ -63,3 +63,32 @@ var FetchContactById = func(w http.ResponseWriter, req *http.Request) {
 	return
 
 }
+
+// UpdateContact public handler variable for updating an existing contact record
+var UpdateContact = func(w http.ResponseWriter, req *http.Request) {
+	contact := &models.Contact{}
+
+	// decode the request body into a struct
+	err := json.NewDecoder(req.Body).Decode(contact)
+	if err != nil {
+		response := utl.Message(102, "request failed, check your inputs")
+		utl.Respond(w, response)
+		return
+	}
+
+	// fetch contact id from URI
+	params := mux.Vars(req)
+	contactId, paramErr := strconv.Atoi(params["contactId"])
+	if paramErr != nil {
+		response := utl.Message(101, "request failed, contact id missing in URI")
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		utl.Respond(w, response)
+		return
+	}
+
+	// update the contact
+	response := contact.UpdateContact(uint(contactId))
+	utl.Respond(w, response)
+	return
+}

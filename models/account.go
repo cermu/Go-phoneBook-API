@@ -281,7 +281,7 @@ func UpdateAccount(updateAccount *UpdateAccountDetails, accountId uint) map[stri
 	emailErr := DBConnection.Table("account").Where("email=? AND id NOT IN (?)",
 		updateAccount.Email, []uint{accountId}).First(tmp).Error
 	if emailErr != nil && emailErr != gorm.ErrRecordNotFound {
-		log.Printf("WARNING | An error occurred while validatin email address: %v\n", emailErr.Error())
+		log.Printf("WARNING | An error occurred while validating email address: %v\n", emailErr.Error())
 		return utl.Message(105, "failed to validate email, try again later")
 	}
 
@@ -292,7 +292,7 @@ func UpdateAccount(updateAccount *UpdateAccountDetails, accountId uint) map[stri
 	phoneErr := DBConnection.Table("account").Where("phone_number=? AND id NOT IN (?)",
 		updateAccount.PhoneNumber, []uint{accountId}).First(tmp).Error
 	if phoneErr != nil && phoneErr != gorm.ErrRecordNotFound {
-		log.Printf("WARNING | An error occurred while validatin phone number: %v\n", phoneErr.Error())
+		log.Printf("WARNING | An error occurred while validating phone number: %v\n", phoneErr.Error())
 		return utl.Message(105, "failed to validate phone number, try again later")
 	}
 

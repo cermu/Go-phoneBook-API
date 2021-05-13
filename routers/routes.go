@@ -99,4 +99,10 @@ var routeSlice = routes{
 		Pattern:     "/contact/{contactId}",
 		HandlerFunc: controllers.FetchContactById,
 	},
+	route{
+		Name:        "UpdateContact",
+		Method:      "POST",
+		Pattern:     "/update/contact/{contactId}",
+		HandlerFunc: controllers.UpdateContact,
+	},
 }

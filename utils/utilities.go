@@ -20,7 +20,7 @@ func init() {
 	vp.SetConfigName("dev_env")                       // config file name without extension
 	vp.SetConfigType("yaml")                          // config file type
 	vp.AddConfigPath("./conf/")                       // . is the root dir of the app
-	vp.AddConfigPath("/opt/goApps/conf/phoneBookAPI") // you can have multiple config paths
+	vp.AddConfigPath("/opt/goApps/conf/phoneBookAPI/") // you can have multiple config paths
 	vp.AutomaticEnv()                                 // read values from ENV variable
 
 	err := vp.ReadInConfig()
