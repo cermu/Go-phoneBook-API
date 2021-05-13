@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// NewRouter public function that returns a pointer to mux.Router
 func NewRouter() *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	router.Use(middlewares.EnableCORS)        // Attach the EnableCORS middleware

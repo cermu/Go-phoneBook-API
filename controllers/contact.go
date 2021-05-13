@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/cermu/Go-phoneBook-API/models"
 	utl "github.com/cermu/Go-phoneBook-API/utils"
+	"github.com/gorilla/mux"
 	"net/http"
+	"strconv"
 )
 
 // CreateContact public handler variable for creating/saving new contacts
@@ -39,4 +41,25 @@ var FetchContactsByAccountId = func(w http.ResponseWriter, req *http.Request) {
 	response := contact.FetchContactsByAccountId(accountId)
 	utl.Respond(w, response)
 	return
+}
+
+// FetchContactById public handler variable for fetching a single contact by its id
+var FetchContactById = func(w http.ResponseWriter, req *http.Request) {
+	contact := &models.Contact{}
+
+	// extract id from URI
+	params := mux.Vars(req)
+	contactId, err := strconv.Atoi(params["contactId"])
+	if err != nil {
+		response := utl.Message(101, "request failed, contact id missing in URI")
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		utl.Respond(w, response)
+		return
+	}
+
+	response := contact.FetchContactById(uint(contactId))
+	utl.Respond(w, response)
+	return
+
 }

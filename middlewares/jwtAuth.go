@@ -51,7 +51,7 @@ func JWTAuthentication(next http.Handler) http.Handler {
 			}
 		}
 
-		// authentication for resources that are restricted
+		// authorization for resources that are restricted
 		response := make(map[string]interface{})
 		accessTokenDetails, err := ExtractTokenFromRequest(req)
 		if err != nil {

@@ -68,11 +68,27 @@ func (contact *Contact) FetchContactsByAccountId(accountId uint) map[string]inte
 	if err != nil {
 		log.Printf("WARNING | An error occurred while fetching contacts for account: %d. Error: %v\n",
 			accountId, err.Error())
-		return utl.Message(105, "failed to fetch contacts, tyr again later")
+		return utl.Message(105, "failed to fetch contacts, try again later")
 	}
 
 	// return the results
 	response := utl.Message(0, "contacts fetched successfully")
 	response["data"] = contacts
+	return response
+}
+
+// FetchContactById public method that fetches a contact by its id passed in the URI
+func (contact *Contact) FetchContactById(contactId uint) map[string]interface{} {
+	// fetch contact from DB
+	result := &Contact{}
+	err := DBConnection.Table("contact").Where("id=?", contactId).First(result).Error
+	if err != nil {
+		log.Printf("WARNING | An error occurred while fetching contact from the DB: %v\n", err.Error())
+		return utl.Message(105, "failed to fetch contact, try again later.")
+	}
+
+	// return results
+	response := utl.Message(0, "contact fetched successfully")
+	response["data"] = result
 	return response
 }

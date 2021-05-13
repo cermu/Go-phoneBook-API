@@ -212,7 +212,15 @@ func Logout(req *http.Request) map[string]interface{} {
 
 // DeactivateAccount public method that set's an account to in active
 func (account *Account) DeactivateAccount(req *http.Request) map[string]interface{} {
+	// create a channel
 	ch := make(chan int, 1)
+
+	// close the channel after use to avoid memory leaks
+	defer func() {
+		close(ch)
+		ch = nil
+	}()
+
 	// delete access token details from redis using go routines
 	go func() {
 		accessDetails, err := middlewares.ExtractTokenFromRequest(req)

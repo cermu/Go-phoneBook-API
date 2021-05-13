@@ -93,4 +93,10 @@ var routeSlice = routes{
 		Pattern:     "/fetch/account/contacts",
 		HandlerFunc: controllers.FetchContactsByAccountId,
 	},
+	route{
+		Name:        "FetchContactById",
+		Method:      "GET",
+		Pattern:     "/contact/{contactId}",
+		HandlerFunc: controllers.FetchContactById,
+	},
 }
