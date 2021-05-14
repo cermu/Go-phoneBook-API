@@ -83,6 +83,9 @@ func (contact *Contact) FetchContactById(contactId uint) map[string]interface{} 
 	result := &Contact{}
 	err := DBConnection.Table("contact").Where("id=?", contactId).First(result).Error
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return utl.Message(104, "contact not found")
+		}
 		log.Printf("WARNING | An error occurred while fetching contact from the DB: %v\n", err.Error())
 		return utl.Message(105, "failed to fetch contact, try again later.")
 	}
@@ -134,4 +137,18 @@ func (contact *Contact) UpdateContact(contactId uint) map[string]interface{} {
 	response := utl.Message(0, "contact updated successfully")
 	response["data"] = contact
 	return response
+}
+
+// DeleteContact public method to remove a contact record from database
+func (contact *Contact) DeleteContact(contactId uint) map[string]interface{} {
+	/*
+		Soft delete a record if there is a DeletedAt column. the column will only be updated with the deletion time.
+		For permanent deletion, add `.Unscoped()` before .Delete()
+	*/
+	err := DBConnection.Table("contact").Where("id=?", contactId).Delete(contact).Error
+	if err != nil {
+		log.Printf("WARNING | An error has occurred while deleting contact: %v\n", err.Error())
+		return utl.Message(105, "failed to delete contact, try again later")
+	}
+	return utl.Message(0, "contact deleted successfully")
 }

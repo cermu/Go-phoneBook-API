@@ -105,4 +105,10 @@ var routeSlice = routes{
 		Pattern:     "/update/contact/{contactId}",
 		HandlerFunc: controllers.UpdateContact,
 	},
+	route{
+		Name:        "DeleteContact",
+		Method:      "GET",
+		Pattern:     "/delete/contact/{contactId}",
+		HandlerFunc: controllers.DeleteContact,
+	},
 }

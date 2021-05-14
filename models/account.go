@@ -176,7 +176,10 @@ func Login(email, password string) map[string]interface{} {
 // account data
 func (account *Account) FetchAccount(accountId uint) map[string]interface{} {
 	err := DBConnection.Table("account").Where("id=?", accountId).First(&account).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return utl.Message(104, "account not found")
+		}
 		log.Printf("WARNING | An error occurred while fetching account from database: %v\n", err)
 		return utl.Message(105, "failed to fetch account details, try again")
 	}
