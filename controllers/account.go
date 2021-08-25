@@ -7,7 +7,6 @@ import (
 	utl "github.com/cermu/Go-phoneBook-API/utils"
 	"github.com/gorilla/mux"
 	"net/http"
-	"strconv"
 )
 
 // CreateAccount public handler variable for creating new users
@@ -30,19 +29,11 @@ var CreateAccount = func(w http.ResponseWriter, req *http.Request) {
 
 // MyAccount public handler variable to fetch a specific account details
 var MyAccount = func(w http.ResponseWriter, req *http.Request) {
-	// fetch account id from URI
-	params := mux.Vars(req)
-	accountId, err := strconv.Atoi(params["accountId"])
-	if err != nil {
-		response := utl.Message(101, "request failed, account id missing in URI")
-		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		utl.Respond(w, response)
-		return
-	}
+	// fetch account id from request context
+	accountId := req.Context().Value("account").(uint)
 
 	account := &models.Account{}
-	response := account.FetchAccount(uint(accountId))
+	response := account.FetchAccount(accountId)
 	utl.Respond(w, response)
 	return
 }

@@ -191,7 +191,7 @@ func (account *Account) FetchAccount(accountId uint) map[string]interface{} {
 
 	// remove the password
 	account.Password = ""
-	response := utl.Message(00, "account details fetched successfully")
+	response := utl.Message(0, "your account details have been fetched successfully")
 	response["data"] = account
 	return response
 }
@@ -363,11 +363,11 @@ func SendResetPasswordLink(resetPassword *ResetPassword) map[string]interface{} 
 		resetPassword.Email, true).First(&account).Error
 	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Printf("WARNING | An error occurred while fetching account from database to send a password reset link: %v\n", err)
-		return utl.Message(0, "an email has been sent with instructions to reset your password")
+		return utl.Message(105, "Sending password reset link had failed, try again later")
 	}
 
 	if account.Email == "" {
-		return utl.Message(0, "an email has been sent with instructions to reset your password")
+		return utl.Message(105, "Sending password reset link has failed, provided email does not exist")
 	}
 
 	// send email
@@ -376,13 +376,14 @@ func SendResetPasswordLink(resetPassword *ResetPassword) map[string]interface{} 
 		// generate reset link
 		resetLinkMeta, rlErr := auth.GenerateResetPasswordLink()
 		if rlErr != nil {
+			log.Printf("WARNING | An error occurred while generating reset password link in SendResetPasswordLink method: %v\n", rlErr)
 			done <- false
 		}
 
 		// save metadata to redis
 		saveErr := auth.SaveResetLinkMetadata(account.ID, resetLinkMeta)
 		if saveErr != nil {
-			log.Printf("WARNING | An error occurred while saving to redis: %v\n", saveErr)
+			log.Printf("WARNING | An error occurred while saving to redis in SendResetPasswordLink method: %v\n", saveErr)
 			done <- false
 		}
 
@@ -393,8 +394,12 @@ func SendResetPasswordLink(resetPassword *ResetPassword) map[string]interface{} 
 		log.Printf("INFO | An email has been sent to: %v with link: %v", account.Email, resetLink)
 		done <- true
 	}()
-	<-done
-	return utl.Message(0, "an email has been sent with instructions to reset your password")
+	// <-done
+	emailSent := <-done
+	if !emailSent {
+		return utl.Message(105, "Sending reset password link has failed, try again later")
+	}
+	return utl.Message(0, "An email has been sent with instructions to reset your password")
 }
 
 // ResetPassword public method used to reset an account's password
@@ -410,7 +415,7 @@ func ResetAccountPassword(resetLinkToken string, changePassword *ChangePassword)
 	// fetch metadata from redis
 	accountId, err := utl.RedisClient().Get(resetLinkToken).Result()
 	if err != nil {
-		log.Printf("WARNING | An error has occurred while fetching data from redis: %v\n", err.Error())
+		log.Printf("WARNING | An error has occurred while fetching data from redis in ResetAccountPassword method: %v\n", err.Error())
 		return utl.Message(106, "password reset link has expired")
 	}
 
